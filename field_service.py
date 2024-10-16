@@ -207,6 +207,9 @@ def populate_by_row(my_problem, data):
     # ~ my_problem.objective.set_sense(my_problem.objective.sense.maximize)
     # ~ my_problem.objective.set_sense(my_problem.objective.sense.minimize)
     # Definimos las restricciones del modelo. Encapsulamos esto en una funcion.
+    my_problem.objective.set_sense(my_problem.objective.sense.maximize)
+
+
     add_constraint_matrix(my_problem, data, x_var, y_var, s_var, w_var, q_var, qy_var)
 
     # Exportamos el LP cargado en myprob con formato .lp. 
@@ -290,7 +293,7 @@ def add_constraint_matrix(my_problem, data, x_var, y_var, s_var, w_var, q_var, q
                 for o in range(data.cantidad_ordenes):
                     indices.append(x_var[(t, o, h, d)])
                     values.append(1.0)
-            my_problem.linear_constraints.add(lin_expr=[cplex.SparsePair(ind=indices, val=values)], senses=['L'], rhs=[0], names = [f'maximo_por_turno_{h}'])
+            my_problem.linear_constraints.add(lin_expr=[cplex.SparsePair(ind=indices, val=values)], senses=['L'], rhs=[data.cantidad_trabajadores], names = [f'maximo_por_turno_{h}'])
 
     # 6) Hay pares de órdenes de trabajo que no pueden ser satisfechas en turnos consecutivos de un trabajador (Ord_Confl_oi,oj):
     for oi, oj in data.ordenes_conflictivas:
@@ -519,6 +522,7 @@ def solve_lp(my_problem, data):
     # Obtenemos informacion de la solucion. Esto lo hacemos a traves de 'solution'. 
     x_variables = my_problem.solution.get_values()
     objective_value = my_problem.solution.get_objective_value()
+    var_names=my_problem.variables.get_names()
     status = my_problem.solution.get_status()
     status_string = my_problem.solution.get_status_string(status_code = status)
 
@@ -529,7 +533,7 @@ def solve_lp(my_problem, data):
     for i in range(len(x_variables)):
         # Tomamos esto como valor de tolerancia, por cuestiones numericas.
         if x_variables[i] > TOLERANCE:
-            print('x_' + str(data.items[i].index) + ':' , x_variables[i])
+            print(var_names[i] + ':' , x_variables[i])
 
 def main():
     
